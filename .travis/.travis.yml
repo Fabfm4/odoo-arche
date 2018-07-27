@@ -1,0 +1,35 @@
+sudo: false
+
+lenguage: python
+
+cache:
+  bundler: true
+  directories:
+    - $HOME/docker
+
+python:
+  - "3.4"
+
+services:
+  - docker
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.22.0
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - bash .travis/init.sh
+
+install:
+  - docker-compose up -d
+  - docker exec -it odoo-arche bash -c "ls -al /var/lib/odoo"
+  - docker exec -it odoo-arche bash -c "odoo -d odoodb_test"
+
+before_cache:
+  - mkdir -p $HOME/docker
+
+script:
+  - bundle exec rake test
